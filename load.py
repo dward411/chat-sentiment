@@ -165,6 +165,18 @@ def remove_librarians(df):
     return df
 
 
+def random_sample_split(df, sample_size):
+    print('Getting utterances sample with 50/50 composition...')
+    half_size = sample_size / 2
+    librarian_mask = df['toRecipient'].apply(lambda row: row == "LIBRARIAN")
+    librarian_idxs = random.sample(set(df[librarian_mask].index), half_size)
+    patron_mask = df['toRecipient'].apply(lambda row: row != "LIBRARIAN")
+    patron_idxs = random.sample(set(df[patron_mask].index), half_size)
+    sample_idxs = list(set().union(librarian_idxs, patron_idxs))
+    df = df.loc[sample_idxs]
+    return df
+
+
 if __name__ == '__main__':
     messages = load_messages('data/raw/chats.xlsx')
     create_dirs('data/processed')
@@ -196,7 +208,7 @@ if __name__ == '__main__':
     messages = remove_blacklisted(messages)
     save_messages(messages, 'data/processed/9_removed_blacklisted.xlsx')
 
-    messages = random_sample(messages, 2500)
-    save_messages(messages, 'data/processed/10_random_sample.xlsx')
+    messages = random_sample_split(messages, 2700)
+    save_messages(messages, 'data/processed/10_random_sample_2700.xlsx')
 
     print('Finished data processing...')
