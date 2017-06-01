@@ -177,6 +177,37 @@ def random_sample_split(df, sample_size):
     return df
 
 
+def num_words(line):
+    return len(re.findall(r'\w+', line))
+
+
+def is_time_greeting(s):
+    time_based = (
+        regex_search('noon', s)
+        or regex_search('morning', s)
+        or regex_search('evening', s)
+        or regex_search('day', s)
+        or regex_search('night', s))
+    return regex_search('good', s) and time_based
+
+
+def is_salutation(s):
+    return num_words(s) <= 3 and (
+        regex_search('\\bhi\\b', s) or
+        regex_search('\\bhey\\b', s) or
+        regex_search('hello', s) or
+        regex_search('bye', s) or
+        regex_search('see you', s) or
+        is_time_greeting(s))
+
+
+def remove_salutations(df):
+    print('Removing salutations...')
+    mask = df['body'].apply(lambda row: not is_salutation(row))
+    df = df[mask]
+    return df
+
+
 if __name__ == '__main__':
     messages = load_messages('data/raw/chats.xlsx')
     create_dirs('data/processed')
@@ -208,7 +239,10 @@ if __name__ == '__main__':
     messages = remove_blacklisted(messages)
     save_messages(messages, 'data/processed/9_removed_blacklisted.xlsx')
 
-    messages = random_sample_split(messages, 2700)
-    save_messages(messages, 'data/processed/10_random_sample_2700.xlsx')
+    messages = remove_salutations(messages)
+    save_messages(messages, 'data/processed/10_without_salutation.xlsx')
+
+    messages = random_sample_split(messages, 2500)
+    save_messages(messages, 'data/processed/11_random_sample_2500.xlsx')
 
     print('Finished data processing...')
